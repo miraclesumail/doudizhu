@@ -108,14 +108,12 @@ export function getElesFromArr(arrs: number[], repeat: number = 1) {
     }
   }
   const arr = [];
-  console.log(map, "map");
   for (const key of map) {
     console.log("key", key);
     if (key[1] === repeat) {
       arr.push(key[0]);
     }
   }
-  console.log(arr, "arr");
   return arr;
 }
 

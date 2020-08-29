@@ -4,7 +4,12 @@ import { shuffle, extractArr, removeEleFrom } from "./utils";
 import Card from "./utils/card";
 import Qiang from "./components/qiangdizhu";
 import Chu from "./components/play-card";
+import animateComp from "./components/animate";
 import "./index.css";
+
+const Wrapped = React.forwardRef((props, forwardRef) => (
+  <CardContainer {...props as any} forwardRef={forwardRef} />
+));
 
 export const CardContext = React.createContext({
   cardList: [],
@@ -13,7 +18,8 @@ export const CardContext = React.createContext({
   prevDeskCards: [],
   chuPai: (card: number) => {},
   playCard: () => {},
-  nextTurn: () => {}
+  nextTurn: () => {},
+  clearDeskCards: () => {}
 });
 const arrs = Array.from({ length: 54 }, (_, index) => index);
 
@@ -29,6 +35,12 @@ class App extends Component<any, any> {
     prevDeskCards: [], // 用于比较回合出牌大小
     whoInrun: "" // 是哪一桌出的牌
   };
+
+  private botRefs: any[] = [
+    React.createRef(),
+    React.createRef(),
+    React.createRef()
+  ];
 
   componentDidMount() {
     const cardArrs = shuffle(arrs);
@@ -97,14 +109,55 @@ class App extends Component<any, any> {
       () =>
         setTimeout(
           () =>
-            this.setState({
-              botList: [],
-              cardList: tempList,
-              turn: chosenOne
-            }),
+            this.setState(
+              {
+                turn: chosenOne
+              },
+              () => {
+                setTimeout(() => {
+                  this.setState({
+                    botList: [],
+                    cardList: tempList
+                  });
+                }, 700);
+              }
+            ),
           1000
         )
     );
+  };
+
+  public caclulateAnimate = (chosenOne: number) => {
+    const { botList, cardList } = this.state;
+    const container = document.querySelector(
+      `.container${chosenOne}`
+    ) as HTMLDivElement;
+    const bound1 = container.getBoundingClientRect();
+    console.log(container.getBoundingClientRect());
+    const bot = document.querySelector(".bot-container") as HTMLDivElement;
+    const bound2 = bot.getBoundingClientRect();
+    // y轴移动的距离
+    const translateY = bound1.top - bound2.top;
+
+    const cards: number[] = cardList[chosenOne];
+    const [one, two, three] = botList;
+
+    const index1 = cards.findIndex(item => one <= item);
+    const index2 = cards.findIndex(item => two <= item);
+    const index3 = cards.findIndex(item => three <= item);
+    console.log(one, two, three);
+    console.log(index1, index2, index3);
+    const gapX = bound1.left - bound2.left;
+    const translateX = [
+      gapX + index1 * 30,
+      gapX + index2 * 30,
+      gapX + index3 * 30
+    ];
+    return {
+      translateX,
+      translateY
+    };
+    console.log(translateY, translateX, "translateY");
   };
 
   // 点击牌向上移动
@@ -155,6 +208,8 @@ class App extends Component<any, any> {
     }
   };
 
+  clearDeskCards = () => this.setState({ deskCards: [] });
+
   render() {
     const {
       cardList,
@@ -178,7 +233,8 @@ class App extends Component<any, any> {
             prevDeskCards,
             chuPai: this.chuPai as any,
             playCard: this.playCard,
-            nextTurn: this.nextTurn
+            nextTurn: this.nextTurn,
+            clearDeskCards: this.clearDeskCards
           }}
         >
           {!hasQiang ? (
@@ -198,17 +254,31 @@ class App extends Component<any, any> {
           {/*底牌 抢地主*/}
           <div className="bot-container">
             {botList.length ? (
-              botList.map((card: any, index: number) => (
-                <CardContainer
-                  key={index}
-                  {...{
-                    cardId: card,
-                    index,
-                    style: this.getBotStyle(index),
-                    hidden: !botShow
-                  }}
-                />
-              ))
+              botList.map((card: any, index: number) => {
+                const ref = this.botRefs[index];
+                const props = {
+                  key: index,
+                  cardId: card,
+                  index,
+                  style: this.getBotStyle(index),
+                  hidden: !botShow
+                };
+
+                if (turn !== "") {
+                  const animateParams = this.caclulateAnimate(+turn);
+                  const keyParam = {
+                    translateX: animateParams.translateX[index],
+                    translateY: animateParams.translateY,
+                    duration: 500,
+                    delay: 100 * index,
+                    easing: "easeInQuad"
+                  };
+                  const AnimateEle = animateComp(keyParam, Wrapped);
+                  return <AnimateEle ref={ref} {...props} />;
+                } else {
+                  return <CardContainer {...props} />;
+                }
+              })
             ) : null}
           </div>
 

@@ -31,9 +31,14 @@ const Chu: React.FC<Props> = ({
   hideQiang,
   addToList
 }) => {
-  const { turn, deskCards, playCard, prevDeskCards, nextTurn } = useContext(
-    CardContext
-  );
+  const {
+    turn,
+    deskCards,
+    playCard,
+    prevDeskCards,
+    nextTurn,
+    clearDeskCards
+  } = useContext(CardContext);
   const lastTurn = usePrevious(turn);
   const [active, setActive] = useState(false);
   const [count, resetCount] = useCountDown(20);
@@ -62,6 +67,7 @@ const Chu: React.FC<Props> = ({
     () => {
       if (!count) {
         onPass();
+        playCard();
       }
     },
     [count]

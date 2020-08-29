@@ -34,6 +34,7 @@ body {
 
 .bot-container {
   position: absolute;
+  z-index: 100;
   width: 200px;
   height: 120px;
   top: 260px;

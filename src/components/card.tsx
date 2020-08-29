@@ -16,7 +16,8 @@ const CardWraper: React.FC<Props> = ({
   index,
   stand,
   style,
-  hidden
+  hidden,
+  forwardRef
 }) => {
   const { cardList, turn, deskCards, chuPai } = useContext(CardContext);
   const [cardItem, setItem] = useState(new Card(cardId));
@@ -46,6 +47,7 @@ const CardWraper: React.FC<Props> = ({
       }
       style={style || {}}
       onClick={playCards}
+      ref={forwardRef}
     >
       {!hidden ? <div>{cardItem.cardNum}</div> : null}
       {cardItem.cardColor && !hidden ? <div>{cardItem.cardColor}</div> : null}
